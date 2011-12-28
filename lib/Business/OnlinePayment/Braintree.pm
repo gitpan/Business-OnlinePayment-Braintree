@@ -15,24 +15,25 @@ Business::OnlinePayment::Braintree - Online payment processing through Briantree
 
 =head1 VERSION
 
-Version 0.0001
+Version 0.0002
 
 =cut
 
-our $VERSION = '0.0001';
+our $VERSION = '0.0002';
 
 =head1 SYNOPSIS
 
     use Business::OnlinePayment;
 
-    $tx = new Business::OnlinePayment('Braintree');
+    $tx = new Business::OnlinePayment('Braintree',
+                                      merchant_id => 'your merchant id',
+                                      public_key => 'your public key',
+                                      private_key => 'your private key',
+                                     );
 
     $tx->test_transaction(1); # sandbox transaction for development and tests
   
-    $tx->content(merchant_id => 'your merchant id',
-                 public_key => 'your public key',
-                 private_key => 'your private key',
-                 amount => 100,
+    $tx->content(amount => 100,
                  card_number => '4111 1111 1111 1111',
                  expiration => '1212');
 
@@ -75,11 +76,6 @@ sub submit {
 	$config->environment('production');
     }
 
-    # credentials
-    $config->merchant_id($content{merchant_id});
-    $config->public_key($content{public_key});
-    $config->private_key($content{private_key});
-
     # adjust format of expiration date
     $content{expiration} = substr($content{expiration}, 0, 2)
 	. '/'. substr($content{expiration}, 2);
@@ -100,6 +96,23 @@ sub submit {
 	$self->is_success(0);
 	$self->error_message($result->message);
     }
+}
+
+=head2 set_defaults
+
+Sets defaults for the Braintree merchant id, public and private key.
+
+=cut
+    
+sub set_defaults {
+    my ($self, %opts) = @_;
+    my $config = Net::Braintree->configuration;
+
+    $config->merchant_id($opts{merchant_id});
+    $config->public_key($opts{public_key});
+    $config->private_key($opts{private_key});
+
+    return;
 }
 
 =head1 AUTHOR

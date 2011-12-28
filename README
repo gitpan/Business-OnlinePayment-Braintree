@@ -3,19 +3,20 @@ NAME
     Briantree
 
 VERSION
-    Version 0.0001
+    Version 0.0002
 
 SYNOPSIS
         use Business::OnlinePayment;
 
-        $tx = new Business::OnlinePayment('Braintree');
+        $tx = new Business::OnlinePayment('Braintree',
+                                          merchant_id => 'your merchant id',
+                                          public_key => 'your public key',
+                                          private_key => 'your private key',
+                                         );
 
         $tx->test_transaction(1); # sandbox transaction for development and tests
   
-        $tx->content(merchant_id => 'your merchant id',
-                     public_key => 'your public key',
-                     private_key => 'your private key',
-                     amount => 100,
+        $tx->content(amount => 100,
                      card_number => '4111 1111 1111 1111',
                      expiration => '1212');
 
@@ -38,6 +39,9 @@ NOTES
 METHODS
   submit
     Submits transaction to Braintree gateway.
+
+  set_defaults
+    Sets defaults for the Braintree merchant id, public and private key.
 
 AUTHOR
     Stefan Hornburg (Racke), `<racke at linuxia.de>'
