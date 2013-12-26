@@ -15,8 +15,14 @@ WriteMakefile(
     PREREQ_PM => {
         'Test::More' => 0,
 	'Business::OnlinePayment' => 3.01,
-	'Net::Braintree' => 0.2,
+	'Net::Braintree' => 0.017,
     },
     dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean               => { FILES => 'Business-OnlinePayment-Braintree-*' },
+    META_MERGE        => {
+        resources => {
+            repository  => 'https://github.com/interchange/Business-OnlinePayment-Braintree',
+            bugtracker => 'https://github.com/interchange/Business-OnlinePayment-Braintree/issues'
+        },
+    },
 );

@@ -11,15 +11,15 @@ use base 'Business::OnlinePayment';
 
 =head1 NAME
 
-Business::OnlinePayment::Braintree - Online payment processing through Briantree
+Business::OnlinePayment::Braintree - Online payment processing through Braintree
 
 =head1 VERSION
 
-Version 0.0002
+Version 0.003
 
 =cut
 
-our $VERSION = '0.0002';
+our $VERSION = '0.003';
 
 =head1 SYNOPSIS
 
@@ -66,7 +66,7 @@ sub submit {
     my $self = shift;
     my $config = Net::Braintree->configuration;
     my %content = $self->content;
-    my $result;
+    my ($action, $result);
 
     # sandbox vs production
     if ($self->test_transaction) {
@@ -76,17 +76,22 @@ sub submit {
 	$config->environment('production');
     }
 
-    # adjust format of expiration date
-    $content{expiration} = substr($content{expiration}, 0, 2)
-	. '/'. substr($content{expiration}, 2);
-
     # transaction
-    $result = Net::Braintree::Transaction->sale({
-	amount => $content{amount},
-	credit_card => {
-	    number => $content{card_number},
-	    expiration_date => $content{expiration},
-	}});
+    $action = lc($content{action});
+
+    if ($action eq 'normal authorization' ) {
+        $result = $self->sale(1);
+    }
+    elsif ($action eq 'authorization only') {
+        $result = $self->sale(0);
+    }
+    elsif ($action eq 'credit' ) {
+        $result = Net::Braintree::Transaction->refund($content{order_number}, $content{amount});
+    }
+    else {
+        $self->error_message( "unsupported action for Braintree: $content{action}" );
+        return 0;
+    }
 
     if ($result->is_success()) {
 	$self->is_success(1);
@@ -96,6 +101,44 @@ sub submit {
 	$self->is_success(0);
 	$self->error_message($result->message);
     }
+}
+
+=head2 sale $submit
+
+Performs sale transaction with Braintree. Used both
+for settlement ($submit is a true value) and
+authorization ($submit is a false value).
+
+=cut
+
+sub sale {
+    my ($self, $submit) = @_;
+    my %content = $self->content;
+
+    my $result = Net::Braintree::Transaction->sale({
+            amount => $content{amount},
+            order_id => $content{invoice_number},
+            credit_card => {
+                number => $content{card_number},
+                expiration_month => substr($content{expiration},0,2),
+                expiration_year => substr($content{expiration},2,2),
+            },
+            billing => {
+                first_name => $content{first_name},
+                last_name => $content{last_name},
+                company => $content{company},
+                street_address => $content{address},
+                locality => $content{city},
+                region => $content{state},
+                postal_code => $content{zip},
+                country_code_alpha2 => $content{country}
+            },
+            options => {
+	            submit_for_settlement => $submit,
+            }
+        });
+
+    return $result;
 }
 
 =head2 set_defaults
@@ -155,10 +198,23 @@ L<http://search.cpan.org/dist/Business-OnlinePayment-Braintree/>
 
 =head1 ACKNOWLEDGEMENTS
 
+Grant for the following enhancements (RT #88525):
+
+=over 4
+
+=item billing address transmission
+
+=item order number transmission
+
+=item refund ability
+
+=item added submit_for_settlement to complete the "sale" action
+
+=back
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2011 Stefan Hornburg (Racke).
+Copyright 2011-2013 Stefan Hornburg (Racke).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published
