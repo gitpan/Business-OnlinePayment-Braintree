@@ -15,11 +15,11 @@ Business::OnlinePayment::Braintree - Online payment processing through Braintree
 
 =head1 VERSION
 
-Version 0.003
+Version 0.004
 
 =cut
 
-our $VERSION = '0.003';
+our $VERSION = '0.004';
 
 =head1 SYNOPSIS
 
@@ -49,10 +49,12 @@ our $VERSION = '0.003';
 
 Online payment processing through Braintree based on L<Net::Braintree>.
 
+The documentation for L<Net::Braintree> is located at
+L<https://www.braintreepayments.com/docs/perl>.
+
 =head1 NOTES
 
-This is a very basic implementation right now and only for development purposes.
-It is supposed to cover the complete Braintree Perl API finally.
+This is supposed to cover the complete Braintree Perl API finally.
 
 =head1 METHODS
 
@@ -94,8 +96,9 @@ sub submit {
     }
 
     if ($result->is_success()) {
-	$self->is_success(1);
-	$self->authorization($result->transaction->id);
+        $self->is_success(1);
+        $self->authorization($result->transaction->id);
+        $self->order_number($result->transaction->id);
     }
     else {
 	$self->is_success(0);
@@ -115,7 +118,10 @@ sub sale {
     my ($self, $submit) = @_;
     my %content = $self->content;
 
-    my $result = Net::Braintree::Transaction->sale({
+    # get rid of slash inside expiration value
+    $content{expiration} =~ s%/%%;
+
+    my %args = (
             amount => $content{amount},
             order_id => $content{invoice_number},
             credit_card => {
@@ -136,7 +142,14 @@ sub sale {
             options => {
 	            submit_for_settlement => $submit,
             }
-        });
+        );
+
+    if (exists $content{merchant_account_id}
+        && $content{merchant_account_id}) {
+        $args{merchant_account_id} = $content{merchant_account_id};
+    }
+
+    my $result = Net::Braintree::Transaction->sale(\%args);
 
     return $result;
 }
@@ -177,9 +190,9 @@ You can also look for information at:
 
 =over 4
 
-=item * RT: CPAN's request tracker (report bugs here)
+=item * Github issues (report bugs here)
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Business-OnlinePayment-Braintree>
+L<https://github.com/interchange/Business-OnlinePayment-Braintree/issues>
 
 =item * AnnoCPAN: Annotated CPAN documentation
 
@@ -214,7 +227,7 @@ Grant for the following enhancements (RT #88525):
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2011-2013 Stefan Hornburg (Racke).
+Copyright 2011-2014 Stefan Hornburg (Racke).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published
