@@ -33,7 +33,7 @@
       "runtime" : {
          "requires" : {
             "Business::OnlinePayment" : "3.01",
-            "Net::Braintree" : "0.017",
+            "Net::Braintree" : "0.2",
             "Test::More" : "0"
          }
       }
@@ -47,5 +47,5 @@
          "url" : "https://github.com/interchange/Business-OnlinePayment-Braintree"
       }
    },
-   "version" : "0.004"
+   "version" : "0.005"
 }
