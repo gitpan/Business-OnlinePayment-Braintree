@@ -19,9 +19,9 @@ no_index:
     - inc
 requires:
   Business::OnlinePayment: 3.01
-  Net::Braintree: 0.2
+  Net::Braintree: 0.02
   Test::More: 0
 resources:
   bugtracker: https://github.com/interchange/Business-OnlinePayment-Braintree/issues
   repository: https://github.com/interchange/Business-OnlinePayment-Braintree
-version: 0.005
+version: 0.006
